@@ -1,48 +1,52 @@
-# Astro Starter Kit: Basics
+# IoT Management Console (Vite + React)
+
+## Local development
 
 ```sh
-npm create astro@latest -- --template basics
+npm install
+npm run dev
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+Open `http://localhost:3000`.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Backend (FastAPI)
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+See `backend/README.md`.
 
-## 🚀 Project Structure
+## Database (MySQL, local via Docker)
 
-Inside of your Astro project, you'll see the following folders and files:
+1) Copy `.env.example` to `.env` and set:
 
 ```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+MYSQL_ROOT_PASSWORD=...
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+2) Start services:
 
-## 🧞 Commands
+```sh
+docker compose up
+```
 
-All commands are run from the root of the project, from a terminal:
+DB will be exposed at `localhost:3306` (user: `root`, db: `iot`).
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Build & preview
 
-## 👀 Want to learn more?
+```sh
+npm run build
+npm run preview
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Docker (production)
+
+```sh
+docker build -t iot-console .
+docker run --rm -p 8080:80 iot-console
+```
+
+Open `http://localhost:8080`.
+
+## Run both services (optional)
+
+```sh
+docker compose up
+```

@@ -48,9 +48,9 @@
 }
 
 :root {
-  --body-font: var(--_apps---typography--body-font);
-  --heading-font: var(--_apps---typography--heading-font);
-  --button-font: var(--_apps---typography--button-font);
+  --body-font: 'Roboto', sans-serif;
+  --heading-font: 'Roboto', sans-serif;
+  --button-font: 'Roboto', sans-serif;
   --radius: var(--_apps---sizes--radius);
   --background: var(--_apps---colors--background);
   --foreground: var(--_apps---colors--foreground);

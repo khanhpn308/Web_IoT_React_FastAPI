@@ -1,0 +1,3 @@
+-- Bcrypt hashes are ~60 characters. If your table still has `password` VARCHAR(45), run:
+-- USE your_database_name;
+-- ALTER TABLE `user` MODIFY COLUMN `password` VARCHAR(255) NOT NULL;

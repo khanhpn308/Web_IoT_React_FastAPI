@@ -51,7 +51,7 @@ const Layout = () => {
             {/* User Info and Logout */}
             <div className="flex items-center space-x-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm text-slate-300">{user?.name}</p>
+                <p className="text-sm text-slate-300">{user?.fullname ?? user?.username}</p>
                 <p className="text-xs text-slate-400">{user?.role}</p>
               </div>
               <button

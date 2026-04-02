@@ -13,6 +13,15 @@ Open `http://localhost:3000`.
 
 See `backend/README.md`.
 
+### Default admin (seeded on backend startup)
+
+If no user with username `AD00000` exists yet, the API creates one:
+
+- **Username:** `AD00000`
+- **Password:** `khanhxx007`
+
+Change this password after first login in production.
+
 ## Database (MySQL, local via Docker)
 
 1) Copy `.env.example` to `.env` and set:
@@ -50,3 +59,5 @@ Open `http://localhost:8080`.
 ```sh
 docker compose up
 ```
+
+The frontend container proxies `/api` to **`http://backend:8000`** (set via `API_PROXY_TARGET` in `docker-compose.yml`). Do not point the proxy at `127.0.0.1:8000` inside Docker — that is the frontend container itself, not the API.

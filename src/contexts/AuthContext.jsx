@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiFetch } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -14,59 +15,57 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('iot_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  const loadSession = useCallback(async () => {
+    const token = localStorage.getItem('iot_token');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    try {
+      const me = await apiFetch('/api/auth/me');
+      setUser(me);
+    } catch {
+      localStorage.removeItem('iot_token');
+      localStorage.removeItem('iot_user');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const login = (email, password) => {
-    // Mock login logic
-    const mockUser = {
-      id: 'user_' + Date.now(),
-      email,
-      role: email === 'admin@iot.com' ? 'admin' : 'user',
-      name: email.split('@')[0]
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('iot_user', JSON.stringify(mockUser));
-    return { success: true, user: mockUser };
-  };
+  useEffect(() => {
+    loadSession();
+  }, [loadSession]);
 
-  const register = (email, password, name) => {
-    // Mock registration logic
-    const mockUser = {
-      id: 'user_' + Date.now(),
-      email,
-      role: 'user',
-      name
-    };
-    
-    setUser(mockUser);
-    localStorage.setItem('iot_user', JSON.stringify(mockUser));
-    return { success: true, user: mockUser };
+  const login = async (username, password) => {
+    localStorage.removeItem('iot_token');
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      skipAuth: true,
+      body: JSON.stringify({ username, password }),
+    });
+    localStorage.setItem('iot_token', data.access_token);
+    localStorage.setItem('iot_user', JSON.stringify(data.user));
+    setUser(data.user);
+    return { success: true, user: data.user };
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('iot_token');
     localStorage.removeItem('iot_user');
   };
 
-  const isAdmin = () => {
-    return user?.role === 'admin';
-  };
+  const isAdmin = () => user?.role === 'admin';
 
   const value = {
     user,
     login,
-    register,
     logout,
     isAdmin,
-    loading
+    loading,
+    refreshUser: loadSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

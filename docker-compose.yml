@@ -5,11 +5,18 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: iot
     ports:
-      - "3307:3307"
+      # host:container — MySQL listens on 3306 inside the container
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       # Place your table creation SQL here when deploying on server
       - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
 
   backend:
     image: python:3.12-slim
@@ -23,20 +30,26 @@ services:
       - "8000:8000"
     environment:
       - CORS_ORIGINS=http://localhost:3000
-      - DATABASE_URL=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@db:3307/iot
+      # Always use port 3306 for the hostname `db` (service name), not the host-mapped port
+      - DATABASE_URL=mysql+pymysql://root:${MYSQL_ROOT_PASSWORD}@db:3306/iot
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     image: node:22-alpine
     working_dir: /app
     volumes:
       - ./:/app
+    # Vite proxy runs inside this container — must reach backend by Docker service name, not 127.0.0.1
+    environment:
+      API_PROXY_TARGET: http://backend:8000
     command: sh -c "npm install && npm run dev"
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_started
 
 volumes:
   mysql_data:

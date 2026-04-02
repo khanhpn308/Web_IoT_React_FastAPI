@@ -23,7 +23,7 @@ USE `demo_iot` ;
 CREATE TABLE IF NOT EXISTS `demo_iot`.`user` (
   `user_id` INT NOT NULL AUTO_INCREMENT,
   `username` VARCHAR(45) NOT NULL,
-  `password` VARCHAR(45) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
   `fullname` VARCHAR(45) NOT NULL,
   `cccd` DECIMAL(12) NOT NULL,
   `email` VARCHAR(45) NULL,

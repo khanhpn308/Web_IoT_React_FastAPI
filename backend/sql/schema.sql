@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `demo_iot`.`user` (
   `email` VARCHAR(45) NULL,
   `phone` INT NULL,
   `creat_at` DATE NOT NULL,
+  `expired_at` DATE NULL,
   `status` ENUM('active', 'deactive') NOT NULL,
   `role` ENUM('admin', 'user') NOT NULL,
   PRIMARY KEY (`user_id`),

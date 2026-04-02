@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Home, LayoutDashboard, Cpu, Users, LogOut } from 'lucide-react';
+import { Home, LayoutDashboard, Cpu, Users, LogOut, KeyRound } from 'lucide-react';
 
 const Layout = () => {
   const { logout, user, isAdmin } = useAuth();
@@ -13,8 +13,9 @@ const Layout = () => {
   ];
 
   if (isAdmin()) {
-    navItems.push({ to: '/user-management', label: 'User Management', icon: Users });
+    navItems.push({ to: '/user-management', label: 'Quản lý người dùng', icon: Users });
   }
+  navItems.push({ to: '/change-password', label: 'Đổi mật khẩu', icon: KeyRound });
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -32,7 +33,7 @@ const Layout = () => {
             <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => (
                 <NavLink
-                  key={item.to}
+                  key={`${item.to}-${item.label}`}
                   to={item.to}
                   className={({ isActive }) =>
                     `flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
@@ -68,7 +69,7 @@ const Layout = () => {
           <div className="md:hidden flex justify-around pb-3 space-x-2">
             {navItems.map((item) => (
               <NavLink
-                key={item.to}
+                key={`${item.to}-${item.label}`}
                 to={item.to}
                 className={({ isActive }) =>
                   `flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-all duration-200 ${

@@ -30,6 +30,7 @@ def ensure_default_admin(db: Session) -> None:
         email="admin@local",
         phone=None,
         creat_at=date.today(),
+        expired_at=date(2099, 12, 31),
         status="active",
         role="admin",
     )

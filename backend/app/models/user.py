@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import Date, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,5 +20,6 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(45), nullable=True)
     phone: Mapped[int | None] = mapped_column(Integer, nullable=True)
     creat_at: Mapped[object] = mapped_column("creat_at", Date, nullable=False)
+    expired_at: Mapped[date | None] = mapped_column("expired_at", Date, nullable=True)
     status: Mapped[str] = mapped_column(String(10), nullable=False)
     role: Mapped[str] = mapped_column(String(10), nullable=False)

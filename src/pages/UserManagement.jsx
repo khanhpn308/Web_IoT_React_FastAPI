@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Users, X, Trash2, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import AssignDeviceModal from '../components/AssignDeviceModal';
 
 function defaultExpiredAt() {
   const d = new Date();
@@ -65,6 +66,7 @@ export default function UserManagement() {
   const [deleting, setDeleting] = useState(false);
   const [statusPatchingId, setStatusPatchingId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [assignTarget, setAssignTarget] = useState(null);
   /** Ô ngày hết hạn (đăng ký): hiển thị dd/mm/yyyy, không phụ thuộc locale của type="date" */
   const [expiredAtDisplay, setExpiredAtDisplay] = useState(() =>
     isoToDdMmYyyy(defaultExpiredAt())
@@ -182,6 +184,10 @@ export default function UserManagement() {
     setDeleteError('');
   };
 
+  const openAssign = (u) => {
+    setAssignTarget(u);
+  };
+
   const handleDelete = async () => {
     if (deleteConfirm !== 'OK') {
       setDeleteError('Nhập chính xác OK (chữ in hoa)');
@@ -265,6 +271,16 @@ export default function UserManagement() {
                   >
                     {u.role.toUpperCase()}
                   </span>
+                  {u.role === 'user' && (
+                    <button
+                      type="button"
+                      onClick={() => openAssign(u)}
+                      className="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold"
+                      title="Phân quyền thiết bị"
+                    >
+                      Phân quyền
+                    </button>
+                  )}
                   {currentUser?.user_id !== u.user_id && (
                     <button
                       type="button"
@@ -510,6 +526,15 @@ export default function UserManagement() {
             </div>
           </div>
         </div>
+      )}
+
+      {assignTarget && (
+        <AssignDeviceModal
+          user={assignTarget}
+          currentAdmin={currentUser}
+          onClose={() => setAssignTarget(null)}
+          onSuccess={loadUsers}
+        />
       )}
     </div>
   );

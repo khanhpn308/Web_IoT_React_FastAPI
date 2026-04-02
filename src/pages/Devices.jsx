@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Cpu, MapPin, Clock, ExternalLink, Plus, Search } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 import { mockDevices } from '../data/mockData';
 import AddDeviceModal from '../components/AddDeviceModal';
 
@@ -9,12 +10,40 @@ const Devices = () => {
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
   const [devices, setDevices] = useState(mockDevices);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const path = isAdmin() ? '/api/devices' : '/api/devices/my';
+        const list = await apiFetch(path);
+        if (!mounted) return;
+        setDevices(Array.isArray(list) ? list : []);
+      } catch (e) {
+        if (!mounted) return;
+        // fallback to mock for UI continuity
+        setLoadError(e.message || 'Không tải được danh sách thiết bị');
+        setDevices(mockDevices);
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [isAdmin]);
+
   const handleToggleStatus = (deviceId) => {
     setDevices(devices.map(device => 
-      device.id === deviceId 
+      String(device.id ?? device.device_id) === String(deviceId)
         ? { ...device, status: device.status === 'online' ? 'offline' : 'online' }
         : device
     ));
@@ -25,23 +54,28 @@ const Devices = () => {
   };
 
   const handleAddDevice = (newDevice) => {
-    setDevices([...devices, newDevice]);
+    // Optimistically append created device; next page refresh will sync from API.
+    setDevices((prev) => [...prev, newDevice]);
     setShowAddModal(false);
   };
 
-  const roleFilteredDevices = useMemo(() => {
-    if (isAdmin()) return devices;
-    const allowed =
-      user?.assigned_devices ??
-      user?.assignedDevices ??
-      user?.devices ??
-      [];
-    if (!Array.isArray(allowed) || allowed.length === 0) return [];
-    const allowedSet = new Set(allowed);
-    return devices.filter((d) => allowedSet.has(d.id));
-  }, [devices, isAdmin, user]);
+  const normalizedDevices = useMemo(() => {
+    // Normalize data shape between mock and API:
+    // - mock uses { id, name, type, location, ... }
+    // - DB schema uses { device_id, devicename, status }
+    return devices.map((d) => {
+      const id = d.id ?? d.device_id;
+      const name = d.name ?? d.devicename ?? `Device ${id}`;
+      const type = d.type ?? 'Motor';
+      const location = d.location ?? '—';
+      const lastUpdate = d.lastUpdate ?? '—';
+      const value = d.value ?? '—';
+      const unit = d.unit ?? '';
+      return { ...d, id: String(id), name, type, location, lastUpdate, value, unit };
+    });
+  }, [devices]);
 
-  const filteredDevices = roleFilteredDevices.filter((device) => {
+  const filteredDevices = normalizedDevices.filter((device) => {
     const q = searchTerm.toLowerCase();
     return (
       device.name.toLowerCase().includes(q) ||
@@ -146,9 +180,15 @@ const Devices = () => {
         </div>
         
         <div className="flex items-center space-x-3">
-          <span className="text-slate-400">Total: <span className="text-white font-bold">{devices.length}</span></span>
+          <span className="text-slate-400">
+            Total: <span className="text-white font-bold">{normalizedDevices.length}</span>
+          </span>
         </div>
       </div>
+
+      {loadError && (
+        <div className="p-4 rounded-lg bg-red-900/30 border border-red-700 text-red-200 text-sm">{loadError}</div>
+      )}
 
       {/* Search Bar */}
       <div className="relative">
@@ -177,9 +217,11 @@ const Devices = () => {
           <Cpu className="h-16 w-16 text-slate-600 mx-auto mb-4" />
           <p className="text-slate-400 text-lg">No devices found</p>
           <p className="text-slate-500 text-sm">
-            {isAdmin()
-              ? 'Try adjusting your search criteria'
-              : 'Bạn chưa được cấp quyền truy cập thiết bị nào (role-based access)'}
+            {loading
+              ? 'Đang tải...'
+              : isAdmin()
+                ? 'Try adjusting your search criteria'
+                : 'Bạn chưa được cấp quyền truy cập thiết bị nào (RBAC)'}
           </p>
         </div>
       )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Cpu, AlertCircle } from 'lucide-react';
+import { apiFetch } from '../lib/api';
 
 const AddDeviceModal = ({ onClose, onAdd }) => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,8 @@ const AddDeviceModal = ({ onClose, onAdd }) => {
     password: ''
   });
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const deviceTypes = [
     'Temperature',
@@ -48,25 +51,50 @@ const AddDeviceModal = ({ onClose, onAdd }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
-      const newDevice = {
-        id: 'DEV' + String(Date.now()).slice(-3),
-        name: formData.name,
-        type: formData.type,
-        status: 'online',
-        location: formData.location,
-        lastUpdate: 'Just now',
-        password: formData.password,
-        value: 0,
-        unit: formData.type === 'Temperature' ? '°C' : 
-              formData.type === 'Humidity' ? '%' :
-              formData.type === 'Lighting' ? '%' : 'units'
-      };
-      
-      onAdd(newDevice);
+      setSubmitting(true);
+      setSubmitError('');
+      try {
+        // DB schema: device_id (INT), devicename (VARCHAR), password, status, user_device_asignment_id (NOT NULL)
+        const deviceId = Math.floor(Date.now() % 1000000);
+        const created = await apiFetch('/api/devices', {
+          method: 'POST',
+          body: JSON.stringify({
+            device_id: deviceId,
+            devicename: formData.name,
+            password: formData.password,
+            status: 'active',
+            user_device_asignment_id: 0,
+          }),
+        });
+
+        // Keep existing UI shape via onAdd
+        onAdd({
+          device_id: created?.device_id ?? deviceId,
+          devicename: created?.devicename ?? formData.name,
+          status: created?.status ?? 'active',
+          // UI-only extras (not stored in DB currently)
+          type: formData.type,
+          location: formData.location,
+          lastUpdate: 'Just now',
+          value: 0,
+          unit:
+            formData.type === 'Temperature'
+              ? '°C'
+              : formData.type === 'Humidity'
+                ? '%'
+                : formData.type === 'Lighting'
+                  ? '%'
+                  : 'units',
+        });
+      } catch (err) {
+        setSubmitError(err.message || 'Add device failed');
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -91,6 +119,11 @@ const AddDeviceModal = ({ onClose, onAdd }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {submitError && (
+            <div className="p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-200 text-sm">
+              {submitError}
+            </div>
+          )}
           {/* Device Name */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -188,9 +221,10 @@ const AddDeviceModal = ({ onClose, onAdd }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-blue-500/50"
+              disabled={submitting}
+              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg shadow-blue-500/50 disabled:opacity-60"
             >
-              Add Device
+              {submitting ? 'Adding...' : 'Add Device'}
             </button>
           </div>
         </form>

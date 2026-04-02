@@ -6,11 +6,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.db import SessionLocal, engine
-from app.core.db_migrate import ensure_user_expired_at_column
+from app.core.db_migrate import (
+    ensure_device_authorization_granted_by_varchar,
+    ensure_device_user_device_asignment_id_column,
+    ensure_user_expired_at_column,
+)
 from app.core.db_wait import wait_for_db
 from app.core.mqtt_subscriber import MqttSubscriber
-from app.core.seed import ensure_default_admin
+from app.core.seed import ensure_default_admin, ensure_default_devices
 from app.core.user_expiry import deactivate_expired_users
+from app.models import device  # noqa: F401
+from app.models import device_authorization  # noqa: F401
 from app.models import user  # noqa: F401
 from app.models.base import Base
 
@@ -20,8 +26,11 @@ async def lifespan(app: FastAPI):
     await wait_for_db()
     Base.metadata.create_all(bind=engine)
     ensure_user_expired_at_column(engine)
+    ensure_device_user_device_asignment_id_column(engine)
+    ensure_device_authorization_granted_by_varchar(engine)
     with SessionLocal() as db:
         ensure_default_admin(db)
+        ensure_default_devices(db)
         deactivate_expired_users(db)
 
     mqtt_sub = MqttSubscriber(

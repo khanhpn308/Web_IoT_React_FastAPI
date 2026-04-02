@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `demo_iot`.`device_authorization` (
   `device_id` INT NOT NULL,
   `user_id` INT NOT NULL,
   `granted_at` DATE NULL,
-  `granted_by` DATE NULL,
+  `granted_by` VARCHAR(45) NULL,
   `expired_at` DATE NULL,
   PRIMARY KEY (`device_id`, `user_id`),
   INDEX `fk_device_has_user_user1_idx` (`user_id` ASC) VISIBLE,

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Forbidden from '../pages/Forbidden';
 
 const AdminRoute = () => {
   const { user, loading } = useAuth();
@@ -14,7 +15,7 @@ const AdminRoute = () => {
   }
 
   if (user?.role !== 'admin') {
-    return <Navigate to="/home" replace />;
+    return <Forbidden />;
   }
 
   return <Outlet />;

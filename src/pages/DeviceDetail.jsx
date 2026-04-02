@@ -14,9 +14,27 @@ import {
 } from 'recharts';
 import { ArrowLeft, Cpu, MapPin, Clock, Edit2, Eye, EyeOff, Wifi, WifiOff, Activity, Gauge, Zap, Waves } from 'lucide-react';
 import { mockDevices, generateDeviceHistory } from '../data/mockData';
+import { apiFetch } from '../lib/api';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 
 const WS_BASE = import.meta.env.VITE_WS_URL ?? '';
+
+/** Map API device row to the shape used by this page (previously mock-only). */
+function mapApiDeviceToUi(d) {
+  const id = String(d.device_id);
+  const online = String(d.status || '').toLowerCase() === 'active';
+  return {
+    id,
+    name: d.devicename || `Device ${id}`,
+    type: 'Motor',
+    location: '—',
+    lastUpdate: '—',
+    value: '—',
+    unit: '',
+    password: d.password != null && String(d.password).length > 0 ? String(d.password) : '********',
+    status: online ? 'online' : 'offline',
+  };
+}
 
 function formatTime(ts) {
   try {
@@ -34,6 +52,8 @@ function capPush(arr, item, max = 80) {
 const DeviceDetail = () => {
   const { deviceId } = useParams();
   const navigate = useNavigate();
+  const [device, setDevice] = useState(null);
+  const [loadingDevice, setLoadingDevice] = useState(true);
   const [activeTab, setActiveTab] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -41,9 +61,29 @@ const DeviceDetail = () => {
   const [vibrationBar, setVibrationBar] = useState([{ name: 'Vibration', value: 0 }]);
   const wsRef = useRef(null);
   const reconnectTimerRef = useRef(null);
-  
-  const device = mockDevices.find(d => d.id === deviceId);
-  const history = generateDeviceHistory(deviceId);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (!deviceId) return;
+      setLoadingDevice(true);
+      try {
+        const data = await apiFetch(`/api/devices/${encodeURIComponent(deviceId)}`);
+        if (!cancelled) setDevice(mapApiDeviceToUi(data));
+      } catch {
+        const mock = mockDevices.find((d) => String(d.id) === String(deviceId));
+        if (!cancelled) setDevice(mock ?? null);
+      } finally {
+        if (!cancelled) setLoadingDevice(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceId]);
+
+  const history = generateDeviceHistory(device?.id ?? deviceId);
 
   useEffect(() => {
     if (activeTab !== 'dashboard') return undefined;
@@ -110,6 +150,15 @@ const DeviceDetail = () => {
     };
   }, [activeTab, deviceId]);
 
+  if (loadingDevice) {
+    return (
+      <div className="text-center py-12">
+        <Cpu className="h-16 w-16 text-slate-600 mx-auto mb-4 animate-pulse" />
+        <p className="text-slate-400 text-lg">Loading device…</p>
+      </div>
+    );
+  }
+
   if (!device) {
     return (
       <div className="text-center py-12">
@@ -126,7 +175,8 @@ const DeviceDetail = () => {
   }
 
   const maskPassword = (password) => {
-    return '•'.repeat(password.length);
+    const s = password != null ? String(password) : '';
+    return '•'.repeat(Math.max(s.length, 8));
   };
 
   return (

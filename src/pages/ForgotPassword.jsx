@@ -9,7 +9,7 @@ const ForgotPassword = () => {
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [result, setResult] = useState(null);
-
+  
   const validateForm = () => {
     const newErrors = {};
     if (!username.trim()) newErrors.username = 'Nhập tên đăng nhập';

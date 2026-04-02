@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Search, Users, X, Trash2 } from 'lucide-react';
+import { Plus, Search, Users, X, Trash2, Eye, EyeOff } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -40,6 +40,7 @@ function todayIso() {
 const emptyForm = () => ({
   username: '',
   password: '',
+  confirm_password: '',
   fullname: '',
   cccd: '',
   email: '',
@@ -63,6 +64,7 @@ export default function UserManagement() {
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [statusPatchingId, setStatusPatchingId] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   /** Ô ngày hết hạn (đăng ký): hiển thị dd/mm/yyyy, không phụ thuộc locale của type="date" */
   const [expiredAtDisplay, setExpiredAtDisplay] = useState(() =>
     isoToDdMmYyyy(defaultExpiredAt())
@@ -102,6 +104,7 @@ export default function UserManagement() {
     const f = emptyForm();
     setForm(f);
     setExpiredAtDisplay(isoToDdMmYyyy(f.expired_at));
+    setShowPassword(false);
     setSubmitError('');
     setModalOpen(true);
   };
@@ -127,6 +130,12 @@ export default function UserManagement() {
     setSubmitError('');
     setSubmitting(true);
     try {
+      if (!form.password || form.password.length < 6 || form.password.length > 45) {
+        throw new Error('Mật khẩu phải từ 6 đến 45 ký tự');
+      }
+      if (form.password !== form.confirm_password) {
+        throw new Error('Mật khẩu xác nhận không khớp');
+      }
       const cccdStr = String(form.cccd).replace(/\D/g, '');
       if (cccdStr.length !== 12) {
         throw new Error('CCCD phải đúng 12 chữ số');
@@ -275,13 +284,6 @@ export default function UserManagement() {
                   <p className="text-blue-400 font-mono font-semibold">{u.user_id}</p>
                 </div>
                 <div className="bg-slate-900 rounded-lg p-3 border border-slate-700">
-                  <p className="text-slate-500 text-xs mb-1">Thời hạn (ngày)</p>
-                  <p className="text-slate-200 font-semibold">
-                    {u.validity_days != null ? u.validity_days : '—'}
-                  </p>
-                  <p className="text-slate-500 text-[10px] mt-0.5">expired − ngày tạo</p>
-                </div>
-                <div className="bg-slate-900 rounded-lg p-3 border border-slate-700">
                   <p className="text-slate-500 text-xs mb-1">Còn lại (ngày)</p>
                   <p className="text-slate-200 font-semibold">
                     {u.remaining_days != null ? u.remaining_days : '—'}
@@ -347,7 +349,6 @@ export default function UserManagement() {
             <form onSubmit={handleRegister} className="p-4 space-y-4">
               {[
                 ['username', 'Tên đăng nhập', 'text'],
-                ['password', 'Mật khẩu', 'password'],
                 ['fullname', 'Họ và tên', 'text'],
                 ['cccd', 'CCCD (12 số)', 'text'],
                 ['email', 'Email', 'email'],
@@ -364,6 +365,48 @@ export default function UserManagement() {
                   />
                 </div>
               ))}
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Mật khẩu</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={form.password}
+                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                    className="w-full pr-10 px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-slate-200"
+                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-slate-300 mb-1">Xác nhận mật khẩu</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={form.confirm_password}
+                    onChange={(e) => setForm((f) => ({ ...f, confirm_password: e.target.value }))}
+                    className="w-full pr-10 px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-slate-200"
+                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
               <div>
                 <label className="block text-sm text-slate-300 mb-1">
                   Ngày hết hạn (tài khoản active đến hết ngày này)

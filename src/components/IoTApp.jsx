@@ -4,7 +4,8 @@ import { AuthProvider } from '../contexts/AuthContext';
 import Layout from './Layout';
 import Login from '../pages/Login';
 import ForgotPassword from '../pages/ForgotPassword';
-import Dashboard from '../pages/Dashboard';
+import Home from '../pages/Home';
+import GlobalDashboard from '../pages/GlobalDashboard';
 import Devices from '../pages/Devices';
 import DeviceDetail from '../pages/DeviceDetail';
 import UserManagement from '../pages/UserManagement';
@@ -22,8 +23,9 @@ function IoTApp() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/dashboard" element={<GlobalDashboard />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/devices" element={<Devices />} />
               <Route path="/devices/:deviceId" element={<DeviceDetail />} />

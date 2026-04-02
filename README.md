@@ -61,3 +61,5 @@ docker compose up
 ```
 
 The frontend container proxies `/api` to **`http://backend:8000`** (set via `API_PROXY_TARGET` in `docker-compose.yml`). Do not point the proxy at `127.0.0.1:8000` inside Docker — that is the frontend container itself, not the API.
+
+## 2/4/2026: 

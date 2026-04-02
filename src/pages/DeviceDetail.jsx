@@ -1,8 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Cpu, MapPin, Clock, Key, Edit2, Eye, EyeOff, Wifi, WifiOff, Activity } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { ArrowLeft, Cpu, MapPin, Clock, Edit2, Eye, EyeOff, Wifi, WifiOff, Activity, Gauge, Zap, Waves } from 'lucide-react';
 import { mockDevices, generateDeviceHistory } from '../data/mockData';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+
+const WS_BASE = import.meta.env.VITE_WS_URL ?? '';
+
+function formatTime(ts) {
+  try {
+    return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch {
+    return String(ts);
+  }
+}
+
+function capPush(arr, item, max = 80) {
+  const next = [...arr, item];
+  return next.length > max ? next.slice(next.length - max) : next;
+}
 
 const DeviceDetail = () => {
   const { deviceId } = useParams();
@@ -10,9 +37,78 @@ const DeviceDetail = () => {
   const [activeTab, setActiveTab] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [realtimeSeries, setRealtimeSeries] = useState([]);
+  const [vibrationBar, setVibrationBar] = useState([{ name: 'Vibration', value: 0 }]);
+  const wsRef = useRef(null);
+  const reconnectTimerRef = useRef(null);
   
   const device = mockDevices.find(d => d.id === deviceId);
   const history = generateDeviceHistory(deviceId);
+
+  useEffect(() => {
+    if (activeTab !== 'dashboard') return undefined;
+
+    // WebSocket init (Device-specific dashboard)
+    // Connect to a device-specific channel/room by deviceId.
+    // Expected payload examples:
+    // - { ts, deviceId, current, voltage, temperature, vibration }
+    // - { ts, current, voltage, temperature, vibration }  (implicit current device)
+    const url = WS_BASE ? `${WS_BASE}/ws/devices/${deviceId}` : null;
+    if (!url) return undefined;
+
+    let closedByEffect = false;
+
+    const connect = () => {
+      if (closedByEffect) return;
+
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+
+      ws.onmessage = (ev) => {
+        // Parse and normalize chart payload
+        let msg = null;
+        try {
+          msg = JSON.parse(ev.data);
+        } catch {
+          return;
+        }
+
+        const ts = msg.ts ?? Date.now();
+        const time = formatTime(ts);
+
+        const current = Number(msg.current);
+        const voltage = Number(msg.voltage);
+        const temperature = Number(msg.temperature);
+        const vibration = Number(msg.vibration);
+
+        setRealtimeSeries((prev) =>
+          capPush(prev, {
+            time,
+            current: Number.isFinite(current) ? current : 0,
+            voltage: Number.isFinite(voltage) ? voltage : 0,
+            temperature: Number.isFinite(temperature) ? temperature : 0,
+            vibration: Number.isFinite(vibration) ? vibration : 0,
+          })
+        );
+
+        setVibrationBar([{ name: deviceId, value: Number.isFinite(vibration) ? vibration : 0 }]);
+      };
+
+      ws.onclose = () => {
+        if (closedByEffect) return;
+        reconnectTimerRef.current = setTimeout(connect, 1200);
+      };
+    };
+
+    connect();
+
+    return () => {
+      // WebSocket cleanup
+      closedByEffect = true;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, [activeTab, deviceId]);
 
   if (!device) {
     return (
@@ -133,6 +229,16 @@ const DeviceDetail = () => {
             }`}
           >
             History
+          </button>
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex-1 px-6 py-4 font-semibold transition-colors duration-200 ${
+              activeTab === 'dashboard'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+            }`}
+          >
+            Dashboard
           </button>
         </div>
 
@@ -256,6 +362,169 @@ const DeviceDetail = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Device Dashboard</h3>
+                <p className="text-slate-400 text-sm">
+                  Real-time charts for <span className="text-blue-400 font-mono font-semibold">{deviceId}</span>
+                </p>
+                {!WS_BASE && (
+                  <div className="mt-3 p-3 rounded-lg bg-amber-900/30 border border-amber-700 text-amber-200 text-sm">
+                    Missing <span className="font-semibold">VITE_WS_URL</span>. WebSocket will not connect.
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Current */}
+                <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <Gauge className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Current (A)</h4>
+                      <p className="text-slate-400 text-sm">Realtime</p>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={realtimeSeries}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="time" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #334155',
+                          borderRadius: '8px',
+                          color: '#fff',
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="current"
+                        name="Current"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Voltage */}
+                <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <Zap className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Voltage (V)</h4>
+                      <p className="text-slate-400 text-sm">Realtime</p>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={realtimeSeries}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="time" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #334155',
+                          borderRadius: '8px',
+                          color: '#fff',
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="voltage"
+                        name="Voltage"
+                        stroke="#a855f7"
+                        strokeWidth={2}
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Temperature */}
+                <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-red-500/20 rounded-lg">
+                      <Activity className="h-5 w-5 text-red-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Temperature (°C)</h4>
+                      <p className="text-slate-400 text-sm">Realtime</p>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={realtimeSeries}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="time" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #334155',
+                          borderRadius: '8px',
+                          color: '#fff',
+                        }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="temperature"
+                        name="Temperature"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Vibration */}
+                <div className="bg-slate-900 rounded-xl p-6 border border-slate-700">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-2 bg-emerald-500/20 rounded-lg">
+                      <Waves className="h-5 w-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">Vibration</h4>
+                      <p className="text-slate-400 text-sm">Current value</p>
+                    </div>
+                  </div>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={vibrationBar}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                      <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1e293b',
+                          border: '1px solid #334155',
+                          borderRadius: '8px',
+                          color: '#fff',
+                        }}
+                      />
+                      <Bar dataKey="value" fill="#10b981" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           )}

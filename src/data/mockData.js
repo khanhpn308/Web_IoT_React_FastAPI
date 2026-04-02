@@ -197,3 +197,36 @@ export const deviceStatsSummary = {
   offline: mockDevices.filter(d => d.status === 'offline').length,
   uptime: '99.2%'
 };
+
+export const mockRecentAlerts = () => {
+  const now = Date.now();
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const severities = ['info', 'warning', 'critical'];
+  const messages = [
+    'Motor temperature high',
+    'Vibration exceeded threshold',
+    'Device disconnected',
+    'Power fluctuation detected',
+    'Sensor calibration required',
+    'Recovered: normal operating range',
+  ];
+
+  return Array.from({ length: 8 }).map((_, i) => {
+    const device = pick(mockDevices);
+    const severity = pick(severities);
+    return {
+      id: `ALERT_${i + 1}`,
+      time: new Date(now - i * 7 * 60 * 1000).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }),
+      deviceId: device.id,
+      severity,
+      message: pick(messages),
+    };
+  });
+};

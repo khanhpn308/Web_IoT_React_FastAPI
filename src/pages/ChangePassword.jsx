@@ -38,7 +38,7 @@ export default function ChangePassword() {
         }),
       });
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 2000);
+      setTimeout(() => navigate('/home'), 2000);
     } catch (err) {
       setSubmitError(err.message || 'Đổi mật khẩu thất bại');
     } finally {
@@ -51,7 +51,7 @@ export default function ChangePassword() {
       <div className="max-w-md mx-auto space-y-4 text-center py-12">
         <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
         <h1 className="text-2xl font-bold text-white">Đổi mật khẩu thành công</h1>
-        <p className="text-slate-400">Đang chuyển về Dashboard...</p>
+        <p className="text-slate-400">Đang chuyển về Home...</p>
       </div>
     );
   }

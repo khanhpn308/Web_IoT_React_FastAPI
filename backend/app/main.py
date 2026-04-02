@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.db import SessionLocal, engine
 from app.core.db_migrate import ensure_user_expired_at_column
 from app.core.db_wait import wait_for_db
+from app.core.mqtt_subscriber import MqttSubscriber
 from app.core.seed import ensure_default_admin
 from app.core.user_expiry import deactivate_expired_users
 from app.models import user  # noqa: F401
@@ -22,7 +23,26 @@ async def lifespan(app: FastAPI):
     with SessionLocal() as db:
         ensure_default_admin(db)
         deactivate_expired_users(db)
+
+    mqtt_sub = MqttSubscriber(
+        enabled=settings.mqtt_enabled,
+        host=settings.mqtt_host,
+        port=settings.mqtt_port,
+        username=settings.mqtt_username,
+        password=settings.mqtt_password,
+        client_id=settings.mqtt_client_id,
+        keepalive=settings.mqtt_keepalive,
+        topics_csv=settings.mqtt_topics,
+        qos=settings.mqtt_qos,
+        max_messages=settings.mqtt_max_messages,
+    )
+    mqtt_sub.start()
+    app.state.mqtt = mqtt_sub
     yield
+    try:
+        mqtt_sub.stop()
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def create_app() -> FastAPI:

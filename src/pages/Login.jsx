@@ -39,7 +39,7 @@ const Login = () => {
 
     try {
       await login(username.trim(), password);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (err) {
       setSubmitError(err.message || 'Đăng nhập thất bại');
     }

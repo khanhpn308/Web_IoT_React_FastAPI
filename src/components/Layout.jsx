@@ -1,13 +1,14 @@
 import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Home, LayoutDashboard, Cpu, Users, LogOut, KeyRound } from 'lucide-react';
 
 const Layout = () => {
   const { logout, user, isAdmin } = useAuth();
+  const location = useLocation();
 
   const navItems = [
-    { to: '/dashboard', label: 'Home', icon: Home },
+    { to: '/home', label: 'Home', icon: Home },
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/devices', label: 'Devices', icon: Cpu },
   ];
@@ -16,6 +17,12 @@ const Layout = () => {
     navItems.push({ to: '/user-management', label: 'Quản lý người dùng', icon: Users });
   }
   navItems.push({ to: '/change-password', label: 'Đổi mật khẩu', icon: KeyRound });
+
+  const isNavItemActive = (to) => {
+    const path = location.pathname;
+    if (to === '/devices') return path === '/devices' || path.startsWith('/devices/');
+    return path === to;
+  };
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -35,13 +42,14 @@ const Layout = () => {
                 <NavLink
                   key={`${item.to}-${item.label}`}
                   to={item.to}
-                  className={({ isActive }) =>
-                    `flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                      isActive
+                  className={() => {
+                    const active = isNavItemActive(item.to);
+                    return `flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                      active
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/50'
                         : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    }`
-                  }
+                    }`;
+                  }}
                 >
                   <item.icon className="h-5 w-5" />
                   <span className="font-medium">{item.label}</span>
@@ -71,13 +79,12 @@ const Layout = () => {
               <NavLink
                 key={`${item.to}-${item.label}`}
                 to={item.to}
-                className={({ isActive }) =>
-                  `flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-700'
-                  }`
-                }
+                className={() => {
+                  const active = isNavItemActive(item.to);
+                  return `flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    active ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700'
+                  }`;
+                }}
               >
                 <item.icon className="h-5 w-5" />
                 <span className="text-xs">{item.label}</span>

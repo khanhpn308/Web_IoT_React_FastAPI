@@ -21,6 +21,15 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 Health check: `http://localhost:8000/api/health`
 DB check: `http://localhost:8000/api/health/db`
 
+## MQTT subscriber
+
+On startup, the API also starts an MQTT subscriber (Mosquitto).
+
+- Status: `http://localhost:8000/api/mqtt/status`
+- Latest messages: `http://localhost:8000/api/mqtt/messages?limit=50`
+
+Configure via `.env` (see `.env.example`): `MQTT_HOST`, `MQTT_PORT`, `MQTT_TOPICS`, ...
+
 ## Environment variables
 
 Copy `.env.example` to `.env` and adjust values.

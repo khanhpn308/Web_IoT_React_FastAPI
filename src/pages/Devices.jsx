@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Cpu, MapPin, Clock, ExternalLink, Plus, Search } from 'lucide-react';
 import { mockDevices } from '../data/mockData';
@@ -7,7 +7,7 @@ import AddDeviceModal from '../components/AddDeviceModal';
 
 const Devices = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [devices, setDevices] = useState(mockDevices);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,11 +29,26 @@ const Devices = () => {
     setShowAddModal(false);
   };
 
-  const filteredDevices = devices.filter(device =>
-    device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    device.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    device.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const roleFilteredDevices = useMemo(() => {
+    if (isAdmin()) return devices;
+    const allowed =
+      user?.assigned_devices ??
+      user?.assignedDevices ??
+      user?.devices ??
+      [];
+    if (!Array.isArray(allowed) || allowed.length === 0) return [];
+    const allowedSet = new Set(allowed);
+    return devices.filter((d) => allowedSet.has(d.id));
+  }, [devices, isAdmin, user]);
+
+  const filteredDevices = roleFilteredDevices.filter((device) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      device.name.toLowerCase().includes(q) ||
+      device.id.toLowerCase().includes(q) ||
+      device.location.toLowerCase().includes(q)
+    );
+  });
 
   const DeviceCard = ({ device }) => (
     <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg hover:shadow-xl hover:border-blue-500 transition-all duration-200 group">
@@ -56,13 +71,14 @@ const Devices = () => {
             </div>
           </div>
           
-          <button
-            onClick={() => handleDeviceClick(device.id)}
+          <Link
+            to={`/devices/${device.id}`}
             className="p-2 hover:bg-slate-700 rounded-lg transition-colors duration-200"
-            title="View Details"
+            title="View Detail"
+            aria-label={`View detail ${device.id}`}
           >
             <ExternalLink className="h-5 w-5 text-slate-400 hover:text-blue-400" />
-          </button>
+          </Link>
         </div>
 
         {/* Device ID */}
@@ -160,7 +176,11 @@ const Devices = () => {
         <div className="text-center py-12">
           <Cpu className="h-16 w-16 text-slate-600 mx-auto mb-4" />
           <p className="text-slate-400 text-lg">No devices found</p>
-          <p className="text-slate-500 text-sm">Try adjusting your search criteria</p>
+          <p className="text-slate-500 text-sm">
+            {isAdmin()
+              ? 'Try adjusting your search criteria'
+              : 'Bạn chưa được cấp quyền truy cập thiết bị nào (role-based access)'}
+          </p>
         </div>
       )}
 

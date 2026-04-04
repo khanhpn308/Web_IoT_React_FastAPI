@@ -31,4 +31,4 @@ sudo dnf install git -y
 git clone httpslink
 
 #Truy cập mysql (root):
-docker exec -it web_iot_react_fastapi-db-1 mysql -u root -p
+docker exec -it web_iot_react_fastapi-db-1 mysql -u root -pkhanh

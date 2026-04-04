@@ -18,13 +18,13 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        # Default pydantic-settings order lets dotenv override env vars; in Docker, Compose
-        # injects DB_* into the environment while /app/.env may still hold dev values.
+        # Later sources override earlier ones. Dotenv must not beat Docker env; env must also
+        # beat optional secret files (file_secret last in default tuple would override env).
         return (
             init_settings,
             dotenv_settings,
-            env_settings,
             file_secret_settings,
+            env_settings,
         )
 
     app_name: str = "IoT Backend API"

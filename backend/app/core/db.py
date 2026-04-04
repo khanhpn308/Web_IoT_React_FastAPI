@@ -1,5 +1,6 @@
 import time
 
+import pymysql
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
@@ -7,9 +8,22 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 
+def _pymysql_connect():
+    """Direct PyMySQL connect — matches manual tests and avoids URL/encoding quirks."""
+    return pymysql.connect(
+        host=settings.db_host,
+        port=settings.db_port,
+        user=settings.db_user,
+        password=settings.db_password,
+        database=settings.db_name,
+        charset="utf8mb4",
+    )
+
+
 def get_engine() -> Engine:
     return create_engine(
-        settings.database_url,
+        "mysql+pymysql://",
+        creator=_pymysql_connect,
         pool_size=20,
         max_overflow=10,
         pool_pre_ping=True,

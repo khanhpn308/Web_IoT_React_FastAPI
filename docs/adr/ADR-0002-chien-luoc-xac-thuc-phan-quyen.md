@@ -1,6 +1,6 @@
 # ADR-0002: Chiến lược xác thực JWT và phân quyền RBAC
 
-- **Trạng thái**: Accepted
+- **Trạng thái**: Draff
 - **Ngày**: 2026-04-04
 - **Người quyết định**: Nhóm kỹ thuật dự án
 

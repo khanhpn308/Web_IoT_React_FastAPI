@@ -1,6 +1,6 @@
 # ADR-0003: Chiến lược dữ liệu realtime cho giám sát thiết bị
 
-- **Trạng thái**: Accepted (giai đoạn hiện tại)
+- **Trạng thái**: Draff (giai đoạn hiện tại)
 - **Ngày**: 2026-04-04
 - **Người quyết định**: Nhóm kỹ thuật dự án
 

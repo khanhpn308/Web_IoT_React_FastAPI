@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import URL
 
 
 class Settings(BaseSettings):
@@ -11,7 +12,11 @@ class Settings(BaseSettings):
     app_name: str = "IoT Backend API"
     environment: str = "dev"
     cors_origins: str = "http://localhost:3000"
-    database_url: str = "sqlite:///./dev.db"
+    db_host: str = "127.0.0.1"
+    db_port: int = 3306
+    db_user: str = "root"
+    db_password: str = "CHANGE_ME"
+    db_name: str = "iot"
 
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
@@ -29,6 +34,19 @@ class Settings(BaseSettings):
     mqtt_topics: str = "test/topic1,test/topic2"
     mqtt_qos: int = 0
     mqtt_max_messages: int = 500
+
+    @property
+    def database_url(self) -> str:
+        return str(
+            URL.create(
+                "mysql+pymysql",
+                username=self.db_user,
+                password=self.db_password,
+                host=self.db_host,
+                port=self.db_port,
+                database=self.db_name,
+            )
+        )
 
 
 settings = Settings()

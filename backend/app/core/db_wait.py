@@ -2,10 +2,10 @@
 
 import asyncio
 import logging
-import time
 
 from sqlalchemy import text
 
+from app.core.config import settings
 from app.core.db import engine
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,12 @@ SLEEP_SEC = 2.0
 
 async def wait_for_db() -> None:
     """Retry TCP/SQL connect until DB is up or attempts exhausted."""
+
+    logger.info(
+        "Waiting for database at %s:%s",
+        settings.db_host,
+        settings.db_port,
+    )
 
     last_err: Exception | None = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
@@ -39,5 +45,8 @@ async def wait_for_db() -> None:
             )
             await asyncio.sleep(SLEEP_SEC)
 
-    msg = f"Database unavailable after {MAX_ATTEMPTS} attempts: {last_err!r}"
+    msg = (
+        "Database unavailable after "
+        f"{MAX_ATTEMPTS} attempts at {settings.db_host}:{settings.db_port}: {last_err!r}"
+    )
     raise RuntimeError(msg) from last_err

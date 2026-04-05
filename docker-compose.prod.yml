@@ -1,0 +1,60 @@
+# Production-style stack (Linux): Nginx serves built SPA and proxies /api and /ws to FastAPI.
+# Backend is not published on the host; only Nginx exposes 80 (and optionally 443).
+#
+# Usage:
+#   cp .env.example .env   # set passwords and CORS_ORIGINS to your public URL
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# CORS_ORIGINS must match how users open the app, e.g. http://203.0.113.10 or https://iot.example.com
+#
+# HTTPS: use certbot on the host, or mount certs and add the ssl server block in nginx/prod.conf
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-iot}
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+
+  backend:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    expose:
+      - "8000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE:-iot}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      # - "443:443"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_prod_data:

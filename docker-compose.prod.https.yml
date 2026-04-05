@@ -1,0 +1,14 @@
+# Use with: docker compose -f docker-compose.prod.yml -f docker-compose.prod.https.yml up -d --build
+#
+# Before first run:
+# 1. Replace YOUR_DOMAIN in nginx/prod.https.conf with your domain (e.g. iot.example.com).
+# 2. Create ./ssl/ with fullchain.pem and privkey.pem (Let's Encrypt or other CA).
+# 3. Set CORS_ORIGINS=https://your-domain in .env
+
+services:
+  nginx:
+    ports:
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./nginx/prod.https.conf:/etc/nginx/conf.d/default.conf:ro

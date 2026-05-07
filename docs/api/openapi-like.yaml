@@ -15,22 +15,23 @@ tags:
   - name: authorizations
   - name: health
   - name: mqtt
+  - name: websocket
 paths:
   /api/health:
     get:
       tags: [health]
       summary: Kiểm tra health tổng quát
       responses:
-        '200':
+        "200":
           description: Thành công
   /api/health/db:
     get:
       tags: [health]
       summary: Kiểm tra kết nối cơ sở dữ liệu
       responses:
-        '200':
+        "200":
           description: DB hoạt động bình thường
-        '503':
+        "503":
           description: DB không khả dụng
 
   /api/auth/login:
@@ -42,17 +43,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Đăng nhập thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
-        '401':
+                $ref: "#/components/schemas/TokenResponse"
+        "401":
           description: Sai thông tin đăng nhập
-        '403':
+        "403":
           description: Tài khoản bị vô hiệu hóa
 
   /api/auth/register:
@@ -66,17 +67,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
-        '200':
+        "200":
           description: Tạo tài khoản thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPublic'
-        '400':
+                $ref: "#/components/schemas/UserPublic"
+        "400":
           description: Dữ liệu không hợp lệ hoặc trùng
-        '403':
+        "403":
           description: Không có quyền admin
 
   /api/auth/bootstrap:
@@ -88,11 +89,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BootstrapRequest'
+              $ref: "#/components/schemas/BootstrapRequest"
       responses:
-        '200':
+        "200":
           description: Tạo admin đầu tiên thành công
-        '403':
+        "403":
           description: Đã có user, bootstrap bị khóa
 
   /api/auth/me:
@@ -102,13 +103,13 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPublic'
-        '401':
+                $ref: "#/components/schemas/UserPublic"
+        "401":
           description: Chưa xác thực
 
   /api/auth/recover-password:
@@ -120,15 +121,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecoverPasswordRequest'
+              $ref: "#/components/schemas/RecoverPasswordRequest"
       responses:
-        '200':
+        "200":
           description: Cấp mật khẩu tạm mới
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RecoverPasswordResponse'
-        '400':
+                $ref: "#/components/schemas/RecoverPasswordResponse"
+        "400":
           description: Sai thông tin xác thực
 
   /api/auth/change-password:
@@ -142,13 +143,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangePasswordRequest'
+              $ref: "#/components/schemas/ChangePasswordRequest"
       responses:
-        '200':
+        "200":
           description: Đổi mật khẩu thành công
-        '400':
+        "400":
           description: Dữ liệu không hợp lệ
-        '401':
+        "401":
           description: Chưa xác thực
 
   /api/users:
@@ -158,15 +159,15 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserPublic'
-        '403':
+                  $ref: "#/components/schemas/UserPublic"
+        "403":
           description: Không có quyền admin
 
   /api/users/{user_id}:
@@ -186,15 +187,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserStatusPatch'
+              $ref: "#/components/schemas/UserStatusPatch"
       responses:
-        '200':
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPublic'
-        '404':
+                $ref: "#/components/schemas/UserPublic"
+        "404":
           description: Không tìm thấy user
     delete:
       tags: [users]
@@ -208,11 +209,11 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
+        "204":
           description: Xóa thành công
-        '400':
+        "400":
           description: Không thể xóa chính mình
-        '404':
+        "404":
           description: Không tìm thấy user
 
   /api/devices:
@@ -222,14 +223,14 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DevicePublic'
+                  $ref: "#/components/schemas/DevicePublic"
     post:
       tags: [devices]
       summary: Tạo thiết bị mới (admin)
@@ -240,15 +241,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeviceCreate'
+              $ref: "#/components/schemas/DeviceCreate"
       responses:
-        '201':
+        "201":
           description: Tạo thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DevicePublic'
-        '409':
+                $ref: "#/components/schemas/DevicePublic"
+        "409":
           description: Thiết bị đã tồn tại
 
   /api/devices/my:
@@ -258,14 +259,14 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DevicePublic'
+                  $ref: "#/components/schemas/DevicePublic"
 
   /api/devices/{device_id}:
     get:
@@ -280,36 +281,131 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceDetailPublic'
-        '404':
+                $ref: "#/components/schemas/DeviceDetailPublic"
+        "404":
           description: Không tìm thấy hoặc không có quyền truy cập
-
-  /api/authorizations:
-    get:
-      tags: [authorizations]
-      summary: Danh sách phân quyền theo user (admin)
+    patch:
+      tags: [devices]
+      summary: Cập nhật một phần thiết bị (admin)
       security:
         - bearerAuth: []
       parameters:
-        - in: query
-          name: user_id
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUpdate"
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevicePublic"
+        "404":
+          description: Không tìm thấy thiết bị
+    delete:
+      tags: [devices]
+      summary: Xóa thiết bị và mọi phân quyền liên quan (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: device_id
           required: true
           schema:
             type: integer
       responses:
-        '200':
+        "204":
+          description: Đã xóa
+        "404":
+          description: Không tìm thấy thiết bị
+
+  /api/devices/topics:
+    get:
+      tags: [devices]
+      summary: Danh sách topic theo thiết bị (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
           description: Thành công
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AuthorizationPublic'
+                  $ref: "#/components/schemas/DeviceTopicPublic"
+        "403":
+          description: Không có quyền admin
+
+  /api/devices/{device_id}/topic:
+    put:
+      tags: [devices]
+      summary: Cập nhật topic riêng cho thiết bị (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceTopicUpdate"
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceTopicPublic"
+        "404":
+          description: Không tìm thấy thiết bị
+
+  /api/authorizations:
+    get:
+      tags: [authorizations]
+      summary: Danh sách phân quyền theo user hoặc theo thiết bị (admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: user_id
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: device_id
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuthorizationPublic"
+        "400":
+          description: Thiếu tham số hoặc truyền cả user_id và device_id
     post:
       tags: [authorizations]
       summary: Tạo phân quyền user-thiết bị (admin)
@@ -320,15 +416,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthorizationCreate'
+              $ref: "#/components/schemas/AuthorizationCreate"
       responses:
-        '201':
+        "201":
           description: Thành công
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthorizationPublic'
-        '409':
+                $ref: "#/components/schemas/AuthorizationPublic"
+        "409":
           description: Phân quyền đã tồn tại
 
   /api/mqtt/status:
@@ -336,9 +432,9 @@ paths:
       tags: [mqtt]
       summary: Trạng thái MQTT subscriber
       responses:
-        '200':
+        "200":
           description: Thành công
-        '503':
+        "503":
           description: MQTT chưa được khởi tạo
 
   /api/mqtt/messages:
@@ -355,10 +451,156 @@ paths:
             maximum: 1000
             default: 50
       responses:
-        '200':
+        "200":
           description: Thành công
-        '503':
+        "503":
           description: MQTT chưa được khởi tạo
+
+  /api/mqtt/topics:
+    get:
+      tags: [mqtt]
+      summary: Danh sách topic MQTT đang theo dõi (admin)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Thành công
+        "403":
+          description: Không có quyền admin
+
+  /api/mqtt/topics/subscribe:
+    post:
+      tags: [mqtt]
+      summary: Subscribe topic động khi runtime (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topic]
+              properties:
+                topic:
+                  type: string
+                qos:
+                  type: integer
+                  nullable: true
+      responses:
+        "200":
+          description: Thành công
+        "403":
+          description: Không có quyền admin
+
+  /api/mqtt/topics/unsubscribe:
+    post:
+      tags: [mqtt]
+      summary: Unsubscribe topic động khi runtime (admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topic]
+              properties:
+                topic:
+                  type: string
+                qos:
+                  type: integer
+                  nullable: true
+      responses:
+        "200":
+          description: Thành công
+        "403":
+          description: Không có quyền admin
+
+  /api/mqtt/history:
+    get:
+      tags: [mqtt]
+      summary: Lịch sử dữ liệu cảm biến trong N phút gần nhất (InfluxDB)
+      parameters:
+        - in: query
+          name: minutes
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 180
+            default: 30
+        - in: query
+          name: device_id
+          required: false
+          schema:
+            type: string
+            nullable: true
+      responses:
+        "200":
+          description: Thành công
+        "503":
+          description: Influx service chưa được khởi tạo
+
+# WebSocket không thuộc OpenAPI 3 chuẩn cho FastAPI, nên không xuất hiện trong /openapi.json và Swagger UI.
+# Để vẫn có tài liệu trong file này, dùng extension key `x-websocket-paths` bên dưới.
+x-websocket-paths:
+  /api/ws/global:
+    tag: websocket
+    summary: Stream realtime global cho toàn bộ frontend dashboard
+    description: |
+      Server broadcast dữ liệu cảm biến realtime từ MQTT đã chuẩn hóa.
+      Client chỉ cần mở kết nối và nhận frame JSON; không bắt buộc gửi dữ liệu lên.
+    serverToClientMessage:
+      $ref: "#/components/schemas/RealtimeSensorMessage"
+    test:
+      url: ws://localhost:8000/api/ws/global
+      notes:
+        - Swagger UI (/docs) không test được WebSocket endpoint.
+        - Dùng Postman WebSocket, Insomnia, hoặc wscat để test.
+
+  /api/ws/devices/{device_id}:
+    tag: websocket
+    summary: Stream realtime theo từng thiết bị
+    description: |
+      Chỉ phát dữ liệu có device_id tương ứng với path param.
+    pathParams:
+      device_id:
+        type: string
+        example: "101"
+    serverToClientMessage:
+      $ref: "#/components/schemas/RealtimeSensorMessage"
+    test:
+      url: ws://localhost:8000/api/ws/devices/101
+
+  /api/ws/esp32/{device_id}:
+    tag: websocket
+    summary: Kết nối WebSocket 2 chiều cho ESP32
+    description: |
+      Device gửi telemetry dạng JSON hoặc binary frame.
+      Server trả ack/pong/echo, đồng thời duy trì kết nối theo device_id.
+    pathParams:
+      device_id:
+        type: string
+        example: "101"
+    clientToServerMessage:
+      oneOf:
+        - $ref: "#/components/schemas/Esp32TelemetryMessage"
+        - type: string
+          description: Text bất kỳ (server echo lại)
+        - type: string
+          format: binary
+          description: Binary frame (server phản hồi độ dài bytes)
+    serverToClientMessage:
+      oneOf:
+        - $ref: "#/components/schemas/Esp32AckMessage"
+        - $ref: "#/components/schemas/Esp32PongMessage"
+    test:
+      url: ws://localhost:8000/api/ws/esp32/101
+      notes:
+        - Có thể gửi `{}` để nhận ack.
+        - Có thể gửi chuỗi rỗng để nhận pong.
 
 components:
   securitySchemes:
@@ -445,13 +687,18 @@ components:
           type: integer
         remaining_days:
           type: integer
+        authorized_devices:
+          type: array
+          description: Danh sách thiết bị đã phân quyền (GET /users, admin)
+          items:
+            $ref: "#/components/schemas/AuthorizedDeviceBrief"
     TokenResponse:
       type: object
       properties:
         access_token: { type: string }
         token_type: { type: string, example: bearer }
         user:
-          $ref: '#/components/schemas/UserPublic'
+          $ref: "#/components/schemas/UserPublic"
     RecoverPasswordRequest:
       type: object
       required: [username, cccd]
@@ -493,6 +740,9 @@ components:
           nullable: true
         user_device_asignment_id:
           type: integer
+        topic:
+          type: string
+          nullable: true
     DevicePublic:
       type: object
       properties:
@@ -501,6 +751,15 @@ components:
           type: string
           nullable: true
         status:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        device_type:
+          type: string
+          nullable: true
+        topic:
           type: string
           nullable: true
     DeviceDetailPublic:
@@ -514,6 +773,83 @@ components:
           type: string
           nullable: true
         password:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        device_type:
+          type: string
+          nullable: true
+        topic:
+          type: string
+          nullable: true
+        user_device_asignment_id:
+          type: integer
+          nullable: true
+          description: Chỉ có trong JSON khi caller là admin; user thường nhận null
+        authorized_users:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeviceAuthorizedUser"
+    DeviceAuthorizedUser:
+      type: object
+      properties:
+        user_id: { type: integer }
+        username: { type: string }
+        fullname: { type: string }
+        expired_at:
+          type: string
+          format: date
+          nullable: true
+    AuthorizedDeviceBrief:
+      type: object
+      properties:
+        device_id: { type: integer }
+        devicename:
+          type: string
+          nullable: true
+    DeviceUpdate:
+      type: object
+      properties:
+        devicename:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        device_type:
+          type: string
+          nullable: true
+        topic:
+          type: string
+          nullable: true
+        user_device_asignment_id:
+          type: integer
+          nullable: true
+    DeviceTopicPublic:
+      type: object
+      properties:
+        device_id: { type: integer }
+        devicename:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        topic:
+          type: string
+          nullable: true
+    DeviceTopicUpdate:
+      type: object
+      properties:
+        topic:
           type: string
           nullable: true
     AuthorizationCreate:
@@ -549,3 +885,81 @@ components:
           type: string
           format: date
           nullable: true
+    RealtimeSensorMessage:
+      type: object
+      description: Payload realtime server broadcast về dashboard.
+      properties:
+        device_id:
+          type: string
+          example: "101"
+        sensor_type:
+          type: string
+          example: temperature
+        temperature:
+          type: number
+          format: float
+          nullable: true
+        vibration:
+          type: number
+          format: float
+          nullable: true
+        voltage:
+          type: number
+          format: float
+          nullable: true
+        current:
+          type: number
+          format: float
+          nullable: true
+        ts:
+          type: number
+          format: double
+          description: Unix epoch seconds
+        server_receive_ms:
+          type: integer
+          format: int64
+          nullable: true
+    Esp32TelemetryMessage:
+      type: object
+      description: Payload uplink từ ESP32 lên server.
+      properties:
+        device_id:
+          type: string
+          example: "101"
+        temperature:
+          type: number
+          format: float
+          nullable: true
+        humidity:
+          type: number
+          format: float
+          nullable: true
+        timestamp_ms:
+          type: integer
+          format: int64
+          nullable: true
+    Esp32AckMessage:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        device_id:
+          type: string
+          example: "101"
+        received:
+          type: object
+          additionalProperties: true
+          nullable: true
+    Esp32PongMessage:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        type:
+          type: string
+          example: pong
+        device_id:
+          type: string
+          example: "101"

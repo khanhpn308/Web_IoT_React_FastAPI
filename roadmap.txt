@@ -1,0 +1,99 @@
+# Lộ trình học review dự án React FastAPI IoT
+
+## Giai đoạn 1: Nền tảng bắt buộc
+### 1) Kiến thức cốt lõi bắt buộc
+- HTTP/HTTPS: method, status code, header, body, content-type
+- CORS, cookie vs bearer token
+- REST API design: route naming, request/response schema, idempotency
+- FastAPI cơ bản: router, dependency injection, middleware, lifespan
+- SQL + SQLAlchemy: model mapping, session, transaction, query cơ bản
+- React cơ bản: component, state, context, hook, protected route
+- Docker/docker-compose cơ bản: service, volume, env, startup order
+
+### 2) Lập trình mạng và networking
+- TCP/IP cơ bản: host, port, DNS, NAT, firewall
+- Luồng frontend -> Nginx -> backend
+- MQTT: publish/subscribe, topic, QoS, retain, keep-alive, client-id
+- Cấu hình Mosquitto broker và hành vi reconnect
+- Realtime pattern: push vs pull, tư duy websocket, reconnect strategy
+- Docker networking: service name, bridge network, inter-container access
+
+## Giai đoạn 2: Bảo mật và dữ liệu
+### 3) Bảo mật ứng dụng
+- Authentication/Authorization: JWT issue-verify-expire
+- RBAC: admin/user và protected endpoint
+- Password security: bcrypt hashing, policy, recover/reset flow an toàn
+- Input validation bằng Pydantic
+- SQL injection prevention với ORM
+- Brute-force mitigation: rate limit, lockout
+- Error message hygiene: không lộ thông tin nhạy cảm
+- TLS/HTTPS setup, certificate basics, secure reverse proxy
+- Secrets management: env variables, không hardcode, tách dev/prod
+
+### 4) Dữ liệu và database
+- Relational schema design: user/device/authorization/test logs
+- Constraint: unique, foreign key, nullable
+- Migration strategy: incremental script, backward compatibility
+- Production-safe rollout và tư duy rollback
+- InfluxDB time-series: measurement/tag/field, retention, timestamp
+- Data consistency giữa MySQL và InfluxDB
+
+## Giai đoạn 3: Fullstack và vận hành
+### 5) Frontend để review end-to-end
+- React Router và route guard
+- Auth context và token storage strategy
+- API client layer: base URL, interceptor, error normalization
+- Form validation và UX cho login/register/change password
+- Dashboard state sync với realtime hoặc polling
+
+### 6) Hệ thống và vận hành
+- Nginx reverse proxy: routing, static serving, upstream
+- Containerized deployment trên Linux
+- Logging/monitoring: app logs, container logs, broker logs
+- Startup sequence và health checks
+- Troubleshooting: DB connection fail, MQTT disconnect, CORS, TLS cert
+
+## Giai đoạn 4: Nâng cao review kỹ thuật
+### 7) Code quality và review kỹ thuật
+- Clean architecture basics: separation of concerns
+- API contract consistency backend-frontend
+- Error handling consistency (status code + message shape)
+- Naming, readability, dead code, duplicated logic
+- Testability: unit point, integration point, regression checklist
+
+### 8) Testing cần biết
+- API testing: status, payload assertion
+- Auth flow testing: login, token expiry, forbidden access
+- Database integration test: create/update/query consistency
+- MQTT integration test: publish/subscribe, reconnect edge cases
+- End-to-end smoke test: login -> dashboard -> device operations
+
+## Giai đoạn 5: IoT domain và công cụ
+### 9) Kiến thức domain IoT
+- Device telemetry lifecycle
+- Device authorization và user-device mapping
+- Topic naming convention cho thiết bị
+- Reliability patterns cho kết nối chập chờn
+
+### 10) Công cụ nên thành thạo
+- Git/GitHub workflow
+- Docker CLI + docker-compose
+- SQL client cho MySQL
+- API client: Postman/Insomnia/curl
+- Log inspection tools
+
+## Mốc tiến độ để tự đánh giá
+### Tuần 1-2
+- Hoàn thành Giai đoạn 1
+
+### Tuần 3-4
+- Hoàn thành Giai đoạn 2
+
+### Tuần 5-6
+- Hoàn thành Giai đoạn 3
+
+### Tuần 7
+- Hoàn thành Giai đoạn 4
+
+### Tuần 8
+- Hoàn thành Giai đoạn 5 và chốt checklist review

@@ -1,80 +1,160 @@
-# Cập nhật hệ thống
-sudo dnf update -y
+# Hướng Dẫn Deploy Production (Split Services)
 
-# Cài đặt Docker
-sudo dnf install -y docker
+Tài liệu này được cập nhật theo mô hình tách dịch vụ:
 
-# Khởi động và thiết lập Docker tự động chạy khi boot
-sudo systemctl start docker
-sudo systemctl enable docker
+- `database_service`: MySQL
+- `app_service`: FastAPI + React/Nginx
 
-# Cấp quyền cho user hiện tại (ec2-user) để dùng docker không cần sudo
-sudo usermod -aG docker ec2-user
-
-# Cài đặt docker compose
-## Tạo thư mục chứ Plugin
-sudo mkdir -p /usr/libexec/docker/cli-plugins
-
-## Tải Docker Compose từ GitHub
-sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/libexec/docker/cli-plugins/docker-compose
-
-## Cấp quyền thực thi
-sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
-
-## Kiểm tra version
-docker compose version
-
-# Cài đặt git
-sudo dnf install git -y
-
-#Clone code từ Github
-git clone httpslink
-
-#Truy cập mysql (root):
-docker exec -it web_iot_react_fastapi-db-1 mysql -u root -pkhanh
-
----
-
-## HTTPS (Nginx trong Docker — chưa bật sẵn)
-
-- Stack mặc định (`docker-compose.prod.yml`) **chỉ HTTP port 80**, **chưa** có SSL trong container.
-- Để bật **443**: cần file chứng chỉ + override compose (đã thêm sẵn trong repo).
-
-### Bước 1: Tên miền trỏ về EC2
-
-Tạo bản ghi **A** `your-domain.com` → Public IP của instance (Let's Encrypt không cấp chứng chỉ “chuẩn” cho bare IP như trường hợp phổ biến).
-
-### Bước 2: Lấy chứng chỉ Let’s Encrypt trên server
-
-Tạm **dừng** container Nginx cho đến khi port 80 rảnh (standalone cần chiếm 80):
+## 1) Chuẩn bị server (Amazon Linux)
 
 ```bash
-docker compose -f docker-compose.prod.yml stop nginx
+sudo dnf update -y
+sudo dnf install -y docker git
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+```
+
+Cài Docker Compose plugin:
+
+```bash
+sudo mkdir -p /usr/libexec/docker/cli-plugins
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/libexec/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+docker compose version
+```
+
+## 2) Clone source code
+
+```bash
+git clone <your-repository-url>
+cd React_FastAPI
+```
+
+## 3) Deploy `database_service`
+
+```bash
+cd database_service
+cp .env.example .env
+# chỉnh sửa mật khẩu và port nếu cần
+docker compose up -d
+```
+
+Kiểm tra:
+
+```bash
+docker compose ps
+docker compose logs -f db
+```
+
+## 4) Deploy `app_service`
+
+```bash
+cd ../app_service
+cp .env.example .env
+```
+
+Sửa `.env`:
+
+- `DB_HOST`: IP/hostname của DB server (có thể là máy khác).
+- `DB_PORT`: port MySQL (thường 3306).
+- `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+- `CORS_ORIGINS`: domain frontend hợp lệ.
+- `FRONTEND_HTTP_PORT`: mặc định `80`.
+
+Khởi chạy ứng dụng:
+
+```bash
+docker compose up -d --build
+```
+
+Kiểm tra:
+
+```bash
+docker compose ps
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+## 5) Triển khai HTTPS với Certbot (khuyến nghị)
+
+1. Tạo DNS A record trỏ domain về public IP server.
+2. Lấy chứng chỉ:
+
+```bash
 sudo dnf install -y certbot
 sudo certbot certonly --standalone -d your-domain.com --email you@example.com --agree-tos -n
 ```
 
-Sao chép chứng chỉ vào thư mục `ssl/` trong project (Compose mount thư mục này):
+3. Copy chứng chỉ vào `app_service/ssl/`:
 
 ```bash
+cd app_service
 mkdir -p ssl
 sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem ssl/
 sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem ssl/
 sudo chown "$USER:$USER" ssl/*.pem
 ```
 
-### Bước 3: Sửa `nginx/prod.https.conf`
+4. Sửa `app_service/nginx/prod.https.conf`, thay `YOUR_DOMAIN`.
+5. Nếu cần dùng cấu hình HTTPS nâng cao, tạo file override compose theo chính sách vận hành nội bộ.
 
-Thay mọi `YOUR_DOMAIN` bằng tên miền thật (ví dụ `iot.example.com`) — **cả hai** chỗ `server_name`.
+## 6) Vấn đề build frontend chậm trên EC2
 
-### Bước 4: `.env`
+Nếu instance RAM thấp (`t2.micro`, `t3.micro`), build JS có thể rất chậm do swap.
 
-Đặt `CORS_ORIGINS=https://your-domain.com` (đúng scheme + domain).
+- Nâng cấp tạm thời lên `t3.small`/`t3.medium` khi build.
+- Hoặc build image trên CI/CD rồi pull về server.
+- Theo dõi tài nguyên: `free -h`, `docker stats`.
 
-### Bước 5: Chạy với file override HTTPS
+## 7) Restart container khi có cập nhật
+
+**Viết tắt:**
+
+- **RCU** = **Restart Containers on Update**.
+
+**Công dụng:**
+
+- Nạp code/cấu hình mới vào process đang chạy trong container.
+- Tránh trường hợp đã `git pull` nhưng service vẫn chạy phiên bản cũ.
+
+### 7.1 `app_service`
 
 ```bash
-docker compose -f docker-compose.prod.yml -f docker-compose.prod.https.yml up -d --build
+cd app_service
+git fetch origin
+git pull origin main
+docker compose up -d --build frontend
+docker compose restart backend
+
+# Nếu có đổi .env hoặc docker-compose cho backend
+docker compose up -d --force-recreate backend
 ```
 
-Truy cập: `https://your-domain.com`. Gia hạn cert: `sudo certbot renew` (thường gắn cron); sau renew có thể cần copy lại file vào `ssl/` hoặc dùng symlink tới `/etc/letsencrypt/live/...` (mount trực tiếp thư mục live nếu bạn chỉnh volume trong compose).
+### 7.2 `database_service`
+
+```bash
+cd ../database_service
+git fetch origin
+git pull origin main
+docker compose up -d
+
+# Khi đổi biến môi trường/cấu hình DB
+docker compose up -d --force-recreate db
+```
+
+### 7.3 `influxdb_service`
+
+```bash
+cd ../influxdb_service
+git fetch origin
+git pull origin main
+docker compose up -d
+
+# Khi đổi biến môi trường/cấu hình InfluxDB
+docker compose up -d --force-recreate influxdb
+```
+
+Lưu ý:
+
+- Không chạy `docker compose down -v` nếu chưa backup dữ liệu volume.

@@ -7,15 +7,16 @@
 ## 1. Kiến trúc thư mục chuẩn
 
 ```text
-src/
-  components/        # reusable components và layout
-    ui/              # primitive UI components
-  pages/             # page-level components
-  contexts/          # app-wide state (AuthContext)
-  lib/               # api client, utils
-  hooks/             # custom hooks
-  data/              # mock data và helper demo
-  styles/            # css global, token
+app_service/
+  src/components/      # reusable components và layout
+  src/components/ui/   # primitive UI components
+  src/pages/           # page-level components
+  src/contexts/        # app-wide state (AuthContext)
+  src/lib/             # api client, utils
+  src/hooks/           # custom hooks
+  src/data/            # mock data và helper demo
+  src/styles/          # css global + semantic tokens mapping
+  generated/         # webflow generated design tokens
 ```
 
 ### Nguyên tắc
@@ -23,13 +24,13 @@ src/
 - Component domain không gọi API trực tiếp nếu có thể chuyển lên page/hook.
 - Primitive UI trong `components/ui` không chứa logic nghiệp vụ.
 
-## 2. Luồng quản lý trạng thái (state management)
+## 2. Luồng quản lý trạng thái
 
 ### 2.1 Phân loại state
 - **Global auth state**: quản lý qua `AuthContext`.
-- **Page state**: quản lý bằng `useState`/`useMemo` trong page tương ứng.
-- **Form state**: local state trong form/modal.
-- **Server state**: lấy qua `apiFetch`, cập nhật theo lifecycle trang.
+- **Page state**: quản lý bằng `useState`/`useMemo` trong trang tương ứng.
+- **Form state**: trạng thái cục bộ trong form/modal.
+- **Server state**: lấy qua `apiFetch`, cập nhật theo vòng đời trang.
 
 ### 2.2 Quy tắc bắt buộc
 - Mọi gọi API phải có trạng thái:
@@ -73,12 +74,37 @@ src/
 
 ## 6. Quy tắc UI nhất quán
 
-- Action chính: button xanh dương.
-- Action phá hủy dữ liệu: button đỏ + xác nhận.
-- Trạng thái online/active: xanh lá.
+- Action chính: dùng token `primary`.
+- Action phá hủy dữ liệu: dùng token `destructive` + xác nhận.
+- Trạng thái online/active: dùng semantic token theo hệ thống trạng thái.
 - Không dùng text mơ hồ; thông báo lỗi phải cụ thể.
 
-## 7. Định hướng cải tiến
+## 7. Tiêu chuẩn typography và color token (enterprise)
+
+### 7.1 Nguồn chuẩn (source of truth)
+
+- `app_service/generated/webflow.css`: token gốc từ design system.
+- `app_service/generated/fonts.css`: danh sách font import do Webflow sinh.
+- `app_service/src/styles/global.css`: ánh xạ token sang theme runtime.
+
+### 7.2 Font policy (chuẩn dùng trong ứng dụng)
+
+- Font chuẩn áp dụng UI: `Roboto, sans-serif`.
+- Khai báo thống nhất:
+  - `--body-font`
+  - `--heading-font`
+  - `--button-font`
+- Không hard-code `font-family` tại component nếu không có phê duyệt từ Design.
+- Không chỉnh sửa trực tiếp file generated; override thông qua `global.css`.
+
+### 7.3 Color policy (semantic token)
+
+- Chỉ dùng semantic tokens (`--primary`, `--background`, `--destructive`, ...).
+- Không dùng mã HEX trực tiếp trong component trừ khi có design exception.
+- Light/Dark phải có cặp token tương ứng.
+- Mọi thay đổi token phải cập nhật tài liệu `docs/design/frontend-design-tokens.md`.
+
+## 8. Định hướng cải tiến
 
 - Tách custom hooks cho các luồng lớn:
   - `useUsersManagement`

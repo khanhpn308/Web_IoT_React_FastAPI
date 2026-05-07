@@ -9,6 +9,8 @@ venv/
 .venv/
 backend/venv/
 backend/.venv/
+app_service/backend/venv/
+app_service/backend/.venv/
 
 # python cache
 __pycache__/
@@ -30,4 +32,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Separate service repositories
+app_service/
+database_service/
 

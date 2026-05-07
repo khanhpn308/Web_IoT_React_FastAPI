@@ -2,7 +2,7 @@
 
 - **Mã tài liệu**: ARCH-IOT-001
 - **Phiên bản**: 1.0.0
-- **Ngày cập nhật**: 2026-04-04
+- **Ngày cập nhật**: 2026-04-06
 
 ## 1. Mục tiêu kiến trúc
 
@@ -25,7 +25,7 @@ flowchart LR
 ## 3. Thành phần chính
 
 ### 3.1 Frontend
-- Vị trí mã nguồn: `src/`
+- Vị trí mã nguồn: `app_service/src/`
 - Vai trò:
   - Điều hướng người dùng.
   - Quản lý trạng thái đăng nhập (AuthContext).
@@ -33,7 +33,7 @@ flowchart LR
   - Gọi API backend qua `apiFetch`.
 
 ### 3.2 Backend
-- Vị trí mã nguồn: `backend/app/`
+- Vị trí mã nguồn: `app_service/backend/app/`
 - Vai trò:
   - Cung cấp REST API cho xác thực, user, device, authorization.
   - Quản lý nghiệp vụ phân quyền và trạng thái user.
@@ -76,12 +76,17 @@ flowchart LR
 
 - Frontend và backend triển khai độc lập.
 - CORS cho phép frontend gọi backend theo cấu hình.
-- Secrets cấu hình qua biến môi trường.
+- Secret được cấu hình qua biến môi trường.
 - Khuyến nghị bổ sung reverse proxy và TLS ở môi trường production.
 
 ## 6. Rủi ro kỹ thuật và hướng xử lý
 
-- **Rủi ro**: Frontend dự kiến có WS realtime nhưng backend chưa mở WS endpoint.
+- **Rủi ro**: Frontend dự kiến có WebSocket realtime nhưng backend chưa mở WebSocket endpoint.
   - **Hướng xử lý**: Bổ sung WebSocket gateway hoặc SSE trong backend.
 - **Rủi ro**: Một số màn hình còn phụ thuộc mock data fallback.
   - **Hướng xử lý**: Chuẩn hóa toàn bộ luồng sang API thật.
+
+## 7. Đọc thêm: hướng dẫn chi tiết trong mã nguồn
+
+- **[codebase-walkthrough.md](./codebase-walkthrough.md)** — thuật ngữ (JWT, RBAC, MQTT, …), bản đồ thư mục `app_service/`, thứ tự đọc file khi onboarding hoặc sau thời gian không chạm code.
+- Trong repo, các module Python chính có **module docstring**; hàm/route quan trọng có **docstring** giải thích vai trò. Frontend: **JSDoc** tại `main.jsx`, `App.jsx`, `IoTApp.jsx`, `AuthContext.jsx`, `lib/api.js`, các route guard và `Layout.jsx`.

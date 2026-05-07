@@ -1,0 +1,24 @@
+# GLE = Git Line Endings
+# Cong dung: chuan hoa LF/CRLF trong repo de tranh canh bao va diff rac tren moi he dieu hanh.
+* text=auto
+
+# Unix-style text files
+*.md text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.sql text eol=lf
+*.env text eol=lf
+
+# Windows command files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

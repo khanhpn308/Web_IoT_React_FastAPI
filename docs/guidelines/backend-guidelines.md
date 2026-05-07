@@ -9,7 +9,7 @@
 Hiện trạng mã nguồn:
 
 ```text
-backend/app/
+app_service/backend/app/
   api/       # routers
   core/      # config, deps, security, db, mqtt, migrate
   models/    # SQLAlchemy models
@@ -19,7 +19,7 @@ backend/app/
 Chuẩn mở rộng khuyến nghị:
 
 ```text
-backend/app/
+app_service/backend/app/
   api/
     routers/
   services/
@@ -29,20 +29,23 @@ backend/app/
   schemas/
 ```
 
-## 2. Quy định layer
+## 2. Quy định lớp (layer)
 
 ### 2.1 Router layer (`api`)
+
 - Nhận request, validate schema đầu vào.
 - Gọi service nghiệp vụ.
 - Trả response model.
 - Không chứa truy vấn DB phức tạp kéo dài.
 
-### 2.2 Service layer (`services`) - áp dụng khi refactor
+### 2.2 Service layer (`services`) - áp dụng khi tái cấu trúc
+
 - Chứa logic nghiệp vụ và rule.
 - Không phụ thuộc FastAPI `Request` hoặc `Response`.
 - Điều phối repository và transaction.
 
-### 2.3 Repository layer (`repositories`) - áp dụng khi refactor
+### 2.3 Repository layer (`repositories`) - áp dụng khi tái cấu trúc
+
 - Chứa truy vấn SQLAlchemy.
 - Đóng gói truy xuất dữ liệu theo domain.
 - Không chứa nghiệp vụ vượt khỏi phạm vi dữ liệu.
@@ -80,9 +83,9 @@ backend/app/
 
 ## 6. Quy định dữ liệu và migration
 
-- Migration nhẹ hiện tại chạy trong startup (`db_migrate`).
-- Không chỉnh tay schema production không có kế hoạch rollback.
-- Khuyến nghị chuẩn hóa migration tool (Alembic) khi bước vào production scale.
+- Migration nhẹ hiện tại chạy khi startup (`db_migrate`).
+- Không chỉnh tay schema production khi chưa có kế hoạch rollback.
+- Khuyến nghị chuẩn hóa công cụ migration (Alembic) khi bước vào quy mô production.
 
 ## 7. Quy định bảo mật
 
@@ -97,3 +100,5 @@ backend/app/
   - unit test cho service/repository.
   - integration test cho endpoint auth, users, devices.
 - Mọi bug nghiêm trọng phải có test hồi quy.
+- Với luồng realtime/telemetry, bắt buộc có test profiling độ trễ theo từng chặng (Node -> Gateway -> Server) và lưu được các trường timestamp/delay để phân tích hậu kiểm.
+- Chuẩn báo cáo latency regression nên bao gồm ít nhất `mean`, `p95`, `p99`, `max` và tỉ lệ mẫu lỗi, tham chiếu quy trình tại `docs/testing/testcases.md` (Test Case 02).

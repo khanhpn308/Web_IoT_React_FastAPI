@@ -11,9 +11,28 @@
 - MySQL 8
 - PowerShell (Windows) hoặc shell tương đương
 
-## 2. Cấu hình biến môi trường
+## 2. Cấu trúc triển khai
 
-Tạo file `.env` ở root dự án với các nhóm biến:
+Dự án đã tách thành 2 service root độc lập:
+
+- `app_service` (frontend + backend)
+- `database_service` (MySQL)
+
+## 3. Cấu hình biến môi trường
+
+### 3.1 database_service
+
+Tạo file `database_service/.env` từ `database_service/.env.example`:
+
+- `MYSQL_ROOT_PASSWORD`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `MYSQL_PORT`
+
+### 3.2 app_service
+
+Tạo file `app_service/.env` từ `app_service/.env.example`:
 
 - DB:
   - `DB_HOST`
@@ -22,17 +41,26 @@ Tạo file `.env` ở root dự án với các nhóm biến:
   - `DB_PASSWORD`
   - `DB_NAME`
 - CORS:
-  - `CORS_ORIGINS` (ví dụ `http://localhost:3000`)
-- Frontend:
-  - `VITE_API_URL` (ví dụ `http://localhost:8000`)
-  - `VITE_WS_URL` (nếu dùng realtime)
-- MQTT (tùy chọn):
-  - `MQTT_HOST`, `MQTT_PORT`, `MQTT_TOPICS`, ...
+  - `CORS_ORIGINS` (ví dụ `http://localhost`)
+- Frontend/API:
+  - `API_URL`
+  - `FRONTEND_HTTP_PORT`
+- JWT:
+  - `JWT_SECRET`
+  - `JWT_EXPIRE_MINUTES`
 
-## 3. Chạy backend
+## 4. Khởi chạy Database Service
 
 ```powershell
-cd backend
+cd database_service
+copy .env.example .env
+docker compose up -d
+```
+
+## 5. Chạy Backend (chế độ phát triển)
+
+```powershell
+cd ..\app_service\backend
 py -V:3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -45,17 +73,25 @@ Kiểm tra:
 - `http://localhost:8000/api/health`
 - `http://localhost:8000/api/health/db`
 
-## 4. Chạy frontend
+## 6. Chạy Frontend (chế độ phát triển)
 
 ```powershell
-cd ..
+cd ..\
 npm install
 npm run dev
 ```
 
 Truy cập: `http://localhost:3000`
 
-## 5. Tài khoản mặc định
+## 7. Chạy `app_service` bằng Docker
+
+```powershell
+cd ..\
+copy .env.example .env
+docker compose up -d --build
+```
+
+## 8. Tài khoản mặc định
 
 Backend tự đảm bảo admin mặc định (nếu chưa tồn tại):
 
@@ -64,8 +100,17 @@ Backend tự đảm bảo admin mặc định (nếu chưa tồn tại):
 
 Khuyến nghị đổi mật khẩu ngay sau khi đăng nhập lần đầu.
 
-## 6. Lưu ý vận hành
+## 9. Lưu ý vận hành
 
 - Không commit file `.env`.
-- Nếu DB schema cũ, backend có patch migration nhẹ lúc startup.
+- Nếu schema DB cũ, backend có cơ chế vá migration nhẹ khi startup.
 - MQTT không sẵn sàng không nên làm sập luồng API cốt lõi.
+
+## 10. Triển khai Docker trên Linux (production)
+
+Để triển khai production trên máy chủ Linux cho cả `app_service` và `database_service`,
+tham khảo tài liệu chi tiết: `docs/deployment/docker-linux-deployment.md`.
+
+Các lệnh Docker/Compose thường dùng khi vận hành (build, up/down, log): `docs/deployment/docker-linux-tutorial.md`.
+
+Thao tác trực tiếp với MySQL trên máy chủ (root/user, lọc dữ liệu): `docs/deployment/mysql-linux-operations.md`.

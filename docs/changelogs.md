@@ -1,5 +1,31 @@
 # Changelog (docs)
 
+## 2026-05-17
+
+- **GPS Dashboard & InfluxDB Realtime Integration**
+  - **Backend**:
+    - Triển khai endpoint `GET /api/locations`: Tự động quét thư mục `assets/floorplans/` và trả về danh sách bản đồ SVG khả dụng.
+    - Cấu hình `locations_routes.py` và đăng ký vào `api_router`.
+  - **Frontend**:
+    - Xây dựng hệ thống GPS Tracking hoàn chỉnh:
+      - `MapViewer.jsx`: Xử lý hiển thị bản đồ SVG và ánh xạ tọa độ `x`, `y` động theo tỷ lệ phần trăm (0-100%).
+      - `GPSDashboard.jsx`: Giao diện điều khiển với dropdown chọn khu vực (location) tự động đồng bộ từ API, thanh tìm kiếm thiết bị và danh sách thiết bị realtime.
+      - `GPSPage.jsx`: Trang tích hợp dữ liệu thực tế, thực hiện gộp dữ liệu từ MySQL (danh sách thiết bị) và InfluxDB (tọa độ mới nhất qua `/api/mqtt/history`).
+    - Cơ chế cập nhật: Thiết lập polling 15 giây để đồng bộ vị trí thiết bị liên tục từ InfluxDB.
+    - UI/UX: Bổ sung nút Hamburger Menu tại `Layout.jsx` hỗ trợ chuyển đổi nhanh giữa các Dashboard (Telemetry vs GPS).
+  - **Fixes**: Khắc phục triệt để lỗi encoding ký tự lạ và lỗi render màn hình trắng (White Screen) do truy cập thuộc tính undefined.
+
+- **Frontend - Thiết kế & Triển khai Dashboard Thiết bị**
+  - Thiết kế JSON Schema chuẩn cho endpoint REST `/api/devices` và kênh WebSocket `/ws/devices/{device_id}`, thống nhất kiểu dữ liệu `device_id` là `integer` xuyên suốt hệ thống.
+  - Xây dựng Component Tree Blueprint theo mô hình Smart/Dumb components để tối ưu hiệu năng và khả năng bảo trì.
+  - Triển khai mã nguồn thực tế:
+    - `src/types/device.ts`: Định nghĩa TypeScript Interfaces nghiêm ngặt cho Device và Authorization.
+    - `src/lib/axios.ts`: Cấu hình API client hỗ trợ Bearer Token và tiền tố `/api`.
+    - `src/hooks/useDevices.ts`: Custom hook xử lý fetch dữ liệu, trạng thái loading và error handling.
+    - `src/components/devices/`: Bộ UI components hoàn chỉnh gồm `DeviceFilters`, `DeviceTable`, `DeviceTableRow`, và `DeviceTableSkeleton` (skeleton loading).
+    - `src/pages/Devices.tsx`: Trang danh sách thiết bị tích hợp logic lọc tìm kiếm client-side và điều hướng.
+  - Công nghệ sử dụng: React 19 (Functional Components + Hooks), Tailwind CSS, shadcn/ui, Axios, Lucide React.
+
 ## 2026-05-07
 
 - **Backend - Refactoring**
